@@ -1,5 +1,5 @@
 from database import engine, Base, SessionLocal
-from models import User
+from models import User, Post
 
 Base.metadata.create_all(bind=engine)
 
