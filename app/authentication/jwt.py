@@ -2,9 +2,9 @@ from fastapi import Depends,  HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
-from schema import TokenData
-from hash import  verify_password
-from app.init_db import get_db
+from .schema import TokenData
+from .hash import  verify_password
+from init_db import get_db
 from sqlalchemy.orm import Session
 from models import User
 from dotenv import load_dotenv
@@ -34,7 +34,7 @@ def get_user(username:str, db):
     
 # authentication for user
 def authenticate_user( username: str, password: str, db:Session = Depends(get_db)):
-    user = get_user(username, db)
+    user = get_user(username=username, db=db)
     if not user:
         return False
     if not verify_password(password, user.password):
@@ -43,10 +43,10 @@ def authenticate_user( username: str, password: str, db:Session = Depends(get_db
 
 
 # Now creating access token
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+def create_access_token(data: dict, expires_delete: timedelta | None = None):
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+    if expires_delete:
+        expire = datetime.utcnow() + expires_delete
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
