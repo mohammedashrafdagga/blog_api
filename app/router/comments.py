@@ -5,6 +5,7 @@ from models import User, Post, Comment
 from typing import Annotated, List
 from authentication.jwt import get_current_active_user
 from sqlalchemy.orm import Session
+from utils import post_is_not_exist, get_comment, is_owner_comment
 
 
 # instance form APIRouter
@@ -17,15 +18,10 @@ router = APIRouter(
 # Working With Comment
 
 # adding Comment For Post
-@router.post('/post/{blog_slug}/add', response_model=PostModel)
-async def add_comment(blog_slug:str,request:CommentModel, user:Annotated[User, Depends(get_current_active_user)], db:Session = Depends(get_db)):
+@router.post('/post/{post_slug}/add', response_model=PostModel)
+async def add_comment(post_slug:str,request:CommentModel, user:Annotated[User, Depends(get_current_active_user)], db:Session = Depends(get_db)):
     # get post
-    post =  db.query(Post).filter(Post.slug == blog_slug).first()
-    if not post:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='Post Not Founded'
-        )
+    post =  post_is_not_exist(post_slug=post_slug)
     
     comment = Comment(
         post_id=post.id,
@@ -46,12 +42,8 @@ async def add_comment(blog_slug:str,request:CommentModel, user:Annotated[User, D
 def delete_comment(comment_id: int, user:Annotated[User, Depends(get_current_active_user)],db:Session = Depends(get_db)):
 
     # Check if the comment exists
-    comment: Comment = db.query(Comment).filter(Comment.id == comment_id).first()
-    if not comment:
-        raise HTTPException(status_code=404, detail="Comment not found")
-
-    if comment.user_id != user.id:
-        raise HTTPException(status_code=400, detail="You not allowed to delete comment")
+    comment: Comment = get_comment(comment_id=comment_id)
+    is_owner_comment(user=user, comment=comment)
     
     db.delete(comment)
     db.commit()
@@ -63,12 +55,8 @@ def delete_comment(comment_id: int, user:Annotated[User, Depends(get_current_act
 def update_comment(comment_id: int, request:CommentModel, user:Annotated[User, Depends(get_current_active_user)],db:Session = Depends(get_db)):
 
     # Check if the comment exists
-    comment: Comment = db.query(Comment).filter(Comment.id == comment_id).first()
-    if not comment:
-        raise HTTPException(status_code=404, detail="Comment not found")
-
-    if comment.user_id != user.id:
-        raise HTTPException(status_code=400, detail="You not allowed to delete comment")
+    comment: Comment = get_comment(comment_id=comment_id)
+    is_owner_comment(user=user, comment=comment)
     
     if request.content:
         comment.content = request.content 

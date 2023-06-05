@@ -34,3 +34,13 @@ async def post_is_not_exist(post_slug):
         )
     return post_slug
     
+ 
+async def get_comment(comment_id:int):
+    comment: Comment = db.query(Comment).filter(Comment.id == comment_id).first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    return comment
+    
+def is_owner_comment(user:User, comment:Comment):
+    if user.id != comment.user_id:
+        raise HTTPException(status_code=400, detail="You not allowed to delete comment")
