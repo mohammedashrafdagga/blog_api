@@ -13,7 +13,7 @@ class TokenData(BaseModel):
     
 
 # User Model
-class User(BaseModel):
+class UserModel(BaseModel):
     username: str
     email:str or None = None
     name:str or None = None
@@ -21,5 +21,5 @@ class User(BaseModel):
     
     
 # UserInDB with hash password
-class UserInDB(User):
+class UserInDB(UserModel):
     password:str
